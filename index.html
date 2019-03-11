@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>
+			DCC Hosting Schedule
+		</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	</head>
+	<body data-loading=true>
+		<h1 class=center>DCC Hosting Schedule</h1>
+
+		<div class="loading center">
+			Loading...
+		</div>
+		<div class="loaded">
+			<ul id="errors">
+
+			</ul>
+			<table>
+				<thead>
+					<tr>
+						<th>
+							Date
+						</th>
+						<th>
+							Hosts
+						</th>
+						<th>
+							Note
+						</th>
+					</tr>
+				</thead>
+				<tbody id=rowsGoHere>
+
+				</tbody>
+			</table>
+		</div>
+
+		<style>
+			body {
+				margin-left: auto;
+				margin-right: auto;
+				margin-top: 0;
+				margin-bottom: 0;
+
+				padding: 16px;
+
+				max-width: 800px;
+
+				font-family: "Lato", "Helvetica Neue", Helvetica;
+				color: #333;
+				background-color: #fff;
+			}
+
+			.center {
+				text-align: center;
+			}
+
+			h1, h2 {
+				margin-top: 8px;
+				margin-bottom: 16px;
+			}
+
+
+			a:link {
+				color: #0076df;
+			}
+			a:visited {
+				color: #04819E;
+			}
+
+			#errors {
+				color: red;
+				font-weight: bold;
+			}
+
+
+			[data-loading=false] .loading, .loaded {
+				display: none;
+			}
+			[data-loading=false] .loaded {
+				display: block;
+			}
+			table {
+				margin-left: auto;
+				margin-right: auto;
+				border-collapse: collapse;
+				border: 3px solid gray;
+				width: 100%;
+			}
+			th {
+				font-weight: 300;
+				text-align: left;
+			}
+			tr:first-child td {
+				font-weight: bold;
+			}
+			tr:first-child td {
+				padding-top: 16px;
+				padding-bottom: 16px;
+			}
+			td, th {
+				padding: 8px;
+			}
+			tbody tr:nth-child(even) {
+				background-color: #ececec;
+			}
+		</style>
+
+
+		<script type=module>
+			import { getSheet } from './web_modules/sheetsy.js'
+			import html from './web_modules/@tehshrike--html-template-tag.js'
+
+			const KEY = `1w5r89vWRIo5MtrGyQJOaHJS58ThdGX2tOkTy8WecMUE`
+			const SHEET_ID = `od6`
+
+			const dumbDateRegex = /^(\d+)\/(\d+)\/(\d+)$/
+			const parseDumbDate = str => {
+				const [ , month, day, year ] = str.match(dumbDateRegex)
+				return new Date(year, month - 1, day, 12)
+			}
+
+			const getStartOfToday = () => {
+				const date = new Date()
+				date.setHours(0, 0, 0, 0)
+				return date
+			}
+
+			const isSunday = date => date.getDay() === 0
+			const addDays = (inputDate, amount) => {
+				const date = new Date(inputDate.getTime())
+				date.setDate(date.getDate() + amount)
+				return date
+			}
+
+			const pad = number => number < 10 ? `0` + number : number
+			const formatReasonably = date => `${ pad(date.getFullYear()) }-${ pad(date.getMonth() + 1) }-${ pad(date.getDate()) }`
+
+			const findNextSunday = (date = getStartOfToday()) => {
+				if (isSunday(date)) {
+					return date
+				}
+
+				return findNextSunday(addDays(date, 1))
+			}
+
+			const nextSunday = findNextSunday()
+			const slash = (first, second) => {
+				if (first && second) {
+					return `${ first }/${ second }`
+				} else {
+					return first || second
+				}
+			}
+
+			getSheet(KEY, SHEET_ID).then(sheet => {
+				const nextSundayTimestamp = nextSunday.getTime()
+				const errors = []
+
+				const rowHtml = sheet.rows.map(
+					({
+						date: dateString,
+						firstsundayhost: firstHost,
+						secondsundayhost: secondHost,
+						notes,
+					}) => {
+						try {
+							const date = parseDumbDate(dateString)
+							return {
+								date,
+								firstHost,
+								secondHost,
+								notes,
+							}
+						} catch (err) {
+							errors.push(`Error parsing date "${ dateString }"`)
+							return null
+						}
+					}
+				).filter(
+					o => o && o.date.getTime() > nextSundayTimestamp
+				).map(({ date, firstHost, secondHost, notes }) => html`
+					<tr>
+						<td>${ formatReasonably(date) }</td>
+						<td>${ slash(firstHost, secondHost) }</td>
+						<td>${ notes }</td>
+					</tr>
+				`).join(``)
+
+				document.getElementById(`rowsGoHere`).innerHTML = rowHtml
+
+				document.getElementById(`errors`).innerHTML = errors.map(
+					str => html`<li>${ str }</li>`
+				)
+
+				document.body.dataset.loading = false
+			})
+		</script>
+	</body>
+</html>
