@@ -32,4 +32,4 @@ var index = (literals, ...substs) => {
 };
 
 export default index;
-//# sourceMappingURL=@tehshrike--html-template-tag.js.map
+//# sourceMappingURL=html-template-tag.js.map

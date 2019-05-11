@@ -18,13 +18,13 @@
   "homepage": "https://github.com/TehShrike/dcc-hosting#readme",
   "dependencies": {
     "@pika/web": "^0.3.2",
-    "@tehshrike/html-template-tag": "^3.0.0",
+    "html-template-tag": "^3.1.0",
     "sheetsy": "^2.2.0"
   },
   "@pika/web": {
     "webDependencies": [
       "sheetsy",
-      "@tehshrike/html-template-tag"
+      "html-template-tag"
     ]
   }
 }
