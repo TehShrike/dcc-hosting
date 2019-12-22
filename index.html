@@ -120,16 +120,16 @@
 
 
 		<script type=module>
-			import { getSheet } from './web_modules/sheetsy.js'
+			import { getSheet, getWorkbook } from './web_modules/sheetsy.js'
 			import html from './web_modules/html-template-tag.js'
 
 			const KEY = `1w5r89vWRIo5MtrGyQJOaHJS58ThdGX2tOkTy8WecMUE`
-			const SHEET_ID = `od6`
 
 			const dumbDateRegex = /^(\d+)\/(\d+)\/(\d+)$/
+			const prefixYear = yearString => yearString.length === 2 ? `20${ yearString }` : yearString
 			const parseDumbDate = str => {
 				const [ , month, day, year ] = str.match(dumbDateRegex)
-				return new Date(year, month - 1, day, 12)
+				return new Date(prefixYear(year), month - 1, day, 12)
 			}
 
 			const getStartOfToday = () => {
@@ -156,7 +156,7 @@
 				return findNextSunday(addDays(date, 1))
 			}
 
-			const nextSunday = findNextSunday()
+			const nextSundayTimestamp = findNextSunday().getTime()
 			const slash = (first, second) => {
 				if (first && second) {
 					return `${ first }/${ second }`
@@ -165,11 +165,16 @@
 				}
 			}
 
-			getSheet(KEY, SHEET_ID).then(sheet => {
-				const nextSundayTimestamp = nextSunday.getTime()
+			const main = async() => {
+				const { sheets } = await getWorkbook(KEY)
+				const sheetId = sheets[sheets.length - 1].id
+				const sheet = await getSheet(KEY, sheetId)
+
 				const errors = []
 
-				const rowHtml = sheet.rows.map(
+				const rowHtml = sheet.rows.filter(
+					({ date }) => date,
+				).map(
 					({
 						date: dateString,
 						firstsundayhost: firstHost,
@@ -188,9 +193,9 @@
 							errors.push(`Error parsing date "${ dateString }"`)
 							return null
 						}
-					}
+					},
 				).filter(
-					o => o && o.date.getTime() > nextSundayTimestamp
+					o => o && o.date.getTime() > nextSundayTimestamp,
 				).map(({ date, firstHost, secondHost, notes }) => html`
 					<tr>
 						<td>${ formatReasonably(date) }</td>
@@ -202,10 +207,14 @@
 				document.getElementById(`rowsGoHere`).innerHTML = rowHtml
 
 				document.getElementById(`errors`).innerHTML = errors.map(
-					str => html`<li>${ str }</li>`
+					str => html`<li>${ str }</li>`,
 				)
 
 				document.body.dataset.loading = false
+			}
+
+			main().catch(err => {
+				document.getElementById(`errors`).innerHTML = err.message || err
 			})
 		</script>
 	</body>
