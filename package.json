@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prepare": "pika-web"
+    "prepare": "pika-web",
+    "dev": "npm run prepare && live-server ."
   },
   "repository": {
     "type": "git",
@@ -17,7 +18,7 @@
   },
   "homepage": "https://github.com/TehShrike/dcc-hosting#readme",
   "dependencies": {
-    "@pika/web": "^0.3.2",
+    "@pika/web": "^0.6.1",
     "html-template-tag": "^3.1.0",
     "sheetsy": "^2.2.0"
   },
@@ -26,5 +27,8 @@
       "sheetsy",
       "html-template-tag"
     ]
+  },
+  "devDependencies": {
+    "live-server": "^1.2.1"
   }
 }
