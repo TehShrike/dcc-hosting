@@ -116,6 +116,10 @@
 			tbody tr:nth-child(even) {
 				background-color: #ececec;
 			}
+
+			.date {
+				white-space: nowrap;
+			}
 		</style>
 
 
@@ -198,7 +202,7 @@
 					o => o && o.date.getTime() > nextSundayTimestamp,
 				).map(({ date, firstHost, secondHost, notes }) => html`
 					<tr>
-						<td>${ formatReasonably(date) }</td>
+						<td class=date>${ formatReasonably(date) }</td>
 						<td>${ slash(firstHost, secondHost) }</td>
 						<td>${ notes }</td>
 					</tr>
